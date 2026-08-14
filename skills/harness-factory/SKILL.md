@@ -1,6 +1,15 @@
 ---
 name: harness-factory
-description: Generate agent harnesses from natural-language intent using the agent skills ecosystem as the expert talent pool. Use when the user wants to create a new harness (intent-driven), regenerate/rebuild an existing harness from its manifest, or validate an existing harness. Two modes: `factory <intent>` proposes an expert roster for explicit confirmation then freezes a harness.manifest.json and assembles the harness (orchestrator skill, agents, command, AGENTS.md golden-rule); `factory build` regenerates from an existing manifest. This is the ONLY entry point for creating or regenerating harnesses — never hand-write harness agents/skills/commands ad hoc.
+description: >
+  Generate agent harnesses from natural-language intent using the agent skills
+  ecosystem as the expert talent pool. Use when the user wants to create a new
+  harness (intent-driven), regenerate/rebuild an existing harness from its
+  manifest, or validate an existing harness. Two modes: `factory <intent>`
+  proposes an expert roster for explicit confirmation then freezes a
+  harness.manifest.json and assembles the harness (orchestrator skill, agents,
+  command, AGENTS.md golden-rule); `factory build` regenerates from an existing
+  manifest. This is the ONLY entry point for creating or regenerating harnesses
+  — never hand-write harness agents/skills/commands ad hoc.
 ---
 
 # Harness Factory
