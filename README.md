@@ -83,7 +83,6 @@ Las 5 fases del MVP están completadas. Pendiente de tu lado:
 - `docs/guide-3-steps.md` — instalar, crear un harness, regenerar.
 - `docs/roles.md` — los 3 roles fijos y el runtime.
 - `docs/schema-reference.md` — el manifest explicado.
-- `docs/session-ses_0023-design-record.md` — el registro de diseño de la sesión donde nació el estándar.
 
 ## Licencia
 
