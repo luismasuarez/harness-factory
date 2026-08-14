@@ -60,7 +60,8 @@ harness-factory/
 ├── catalog/                  ← descriptores de rol (skills → candidatos a experto)
 ├── examples/ddd-architecture/← dogfooding: manifest + artefactos reales
 ├── .opencode/INSTALL.md      ← instalación en opencode
-└── docs/                     ← guías y registro de diseño
+├── SECURITY.md               ← política de seguridad y reglas para contribuidores
+└── docs/                     ← guías y referencia
 ```
 
 ## Roadmap
@@ -73,10 +74,22 @@ harness-factory/
 
 ## Estado
 
-Las 5 fases del MVP están completadas. Pendiente de tu lado:
-- Nombre/owner de GitHub para el push (`git remote add origin ...`).
-- Publicación en skills.sh (`npx skills publish`) o distribución vía repo + `INSTALL.md`.
+Las 5 fases del MVP están completadas y el repo está publicado
+(`luismasuarez/harness-factory`). Pendiente:
 - Verificación real del dogfooding: correr `factory build` contra el harness DDD de `portal_saas` y hacer el diff de equivalencia.
+- Publicación en skills.sh (`npx skills publish`).
+
+## Disclaimer
+
+> **Estándar experimental.** Harness Factory es un MVP que estandariza un flujo
+> validado en un solo proyecto (portal_saas). Úsalo a tu propio riesgo: el
+> estándar (schema/templates/runtime) puede evolucionar con breaking changes
+> hasta 1.0. Los harnesses generados ejecutan cambios sobre tu código — revisá
+> siempre el roster propuesto y el plan antes de aprobar la ejecución.
+>
+> **Seguridad.** Este estándar vive dentro de coding agents y puede tocar
+> credenciales de tu entorno. Lee [SECURITY.md](./SECURITY.md): nunca commitees
+> transcripts de sesiones ni secrets en repos generados con esta herramienta.
 
 ## Documentación
 
