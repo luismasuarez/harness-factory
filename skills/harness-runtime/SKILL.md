@@ -8,6 +8,16 @@ description: >
   approval, behavior-preserving slices, gates per slice with revert, artifact
   discipline, and memory protocol. Use together with a harness's own
   orchestrator skill (which carries the variable roster/pipeline).
+license: MIT
+compatibility:
+  - opencode
+metadata:
+  tags:
+    - agent-orchestration
+    - multi-agent
+    - harness
+    - safety
+    - workflows
 ---
 
 # Harness Runtime — Fixed Invariants

@@ -1,5 +1,12 @@
 # Harness Factory 🏭
 
+![License](https://img.shields.io/github/license/luismasuarez/harness-factory)
+![Version](https://img.shields.io/github/v/release/luismasuarez/harness-factory)
+![Stars](https://img.shields.io/github/stars/luismasuarez/harness-factory)
+![Last commit](https://img.shields.io/github/last-commit/luismasuarez/harness-factory)
+![Repo size](https://img.shields.io/github/repo-size/luismasuarez/harness-factory)
+![Made for opencode](https://img.shields.io/badge/Made%20for-opencode-2671E8)
+
 > Estandariza el flujo de trabajo de los coding agents: un intent en lenguaje
 > natural → un harness versionado (orquestador + expertos + ejecutor) con un
 > runtime de seguridad y verificación continua.

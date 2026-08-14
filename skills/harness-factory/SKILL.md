@@ -10,6 +10,16 @@ description: >
   command, AGENTS.md golden-rule); `factory build` regenerates from an existing
   manifest. This is the ONLY entry point for creating or regenerating harnesses
   — never hand-write harness agents/skills/commands ad hoc.
+license: MIT
+compatibility:
+  - opencode
+metadata:
+  tags:
+    - agent-orchestration
+    - multi-agent
+    - harness
+    - mixture-of-experts
+    - workflows
 ---
 
 # Harness Factory
@@ -46,12 +56,25 @@ The factory has **two modes**:
 
 ## Load order
 
-When invoked, FIRST:
-1. Load this skill's companion: `skills/harness-runtime/SKILL.md` (the fixed
-   invariants — read them and carry them into every harness you assemble).
-2. Read `schema/harness.manifest.schema.json` (the contract you emit into).
-3. Read `templates/roles/*.md`, `templates/pieces/*.md`, `templates/blocks/*.md`
-   (the render sources).
+The factory needs its standard resources: the `harness-runtime` skill, the
+`harness.manifest.schema.json` contract, the `templates/` render sources and the
+`catalog/` role descriptors. These are NOT copied into the installed skill
+directory — they live in the `harness-factory` repo. Locate them FIRST:
+
+1. **Repo root**: `$HF_REPO` (env var) if set; otherwise the current checkout if
+   this repo is the working directory (i.e. the repo has `schema/` and
+   `templates/` at its root); otherwise clone it:
+   `git clone --depth 1 https://github.com/luismasuarez/harness-factory <tmp>/harness-factory`
+   (use a temp dir; do not clone into the target project).
+2. Load `skills/harness-runtime/SKILL.md` from the repo (the fixed invariants —
+   read them and carry them into every harness you assemble).
+3. Read `schema/harness.manifest.schema.json` from the repo (the contract you
+   emit into).
+4. Read `templates/roles/*.md`, `templates/pieces/*.md`, `templates/blocks/*.md`
+   from the repo (the render sources).
+
+> If the repo cannot be reached, STOP and report — never assemble a harness
+> without the schema and templates (they are the standard).
 
 ## Mode A · `factory <intent>`
 
@@ -78,7 +101,7 @@ Match the intent's keywords against each skill's descriptor (`trigger`,
 `description`) and the repo stack. Propose:
 
 - **Experts** — one per selected skill: `id` (`expert-<k>`), `role`
-  (`analysis-expert`), `skill`, `skillSource`, `deliverable`, `input`,
+  (`analysis-expert`), `skills[]`, `skillSource`, `deliverable`, `input`,
   `readPaths`, `trigger`.
 - **Executor** — `id` (`executor`), `writePaths`, `bash`, `gates`.
 - **Orchestrator** — agent name, baseline gates, pipeline (ordered Task DAG),
