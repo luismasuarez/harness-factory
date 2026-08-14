@@ -3,8 +3,8 @@
 The **living README / acceptance proof** of the Harness Factory standard.
 
 This example is a reverse-engineering of the real DDD Mixture-of-Experts harness
-built and battle-tested in the `portal_saas` project (bounded context `licenses`,
-10 slices, 19 commits, gates per slice with tripwire).
+built and battle-tested in a private TypeScript monorepo (bounded context
+`licenses`, 10 slices, 19 commits, gates per slice with tripwire).
 
 ## What it proves
 
@@ -34,7 +34,7 @@ deliverables; order is derived from the `pipeline`, not hardcoded in prompts.
 
 ## How to regenerate the reference harness
 
-In a checkout of the target project (portal_saas-like repo):
+In a checkout of the target repo (same stack as the reference):
 
 ```bash
 /factory build           # reads harness.manifest.json from examples/ddd-architecture/

@@ -1,28 +1,58 @@
 # Harness Factory 🏭
 
-> Genera harnesses de agentes a partir de intent en lenguaje natural, usando el
-> ecosistema de agent skills como pool de talento experto.
+> Estandariza el flujo de trabajo de los coding agents: un intent en lenguaje
+> natural → un harness versionado (orquestador + expertos + ejecutor) con un
+> runtime de seguridad y verificación continua.
 
-**Harness Factory** es un estándar open source que convierte un intent
-("refactorizar X a DDD", "crear un SaaS de billing", "auditar seguridad") en un
-**harness completo**: un orquestador + expertos (skills) + ejecutor, con un
-runtime de seguridad fijo (gates, aprobación, slices, tripwire).
+**Harness Factory** es una propuesta de arquitectura estándar para componer el
+ecosistema de agent skills existente en **harnesses de trabajo reproducibles**:
+un intent ("refactorizar X a DDD", "crear un SaaS de billing", "auditar
+seguridad") se convierte en un equipo de agentes acotado a la tarea, con modelo
+de permisos, gates de calidad y trazabilidad.
 
-## Qué resuelve
+## Motivación
 
-Los coding agents ya tienen skills increíbles en el ecosistema
-(`npx skills`, skills.sh, agent skills de vercel/anthropic/prisma/...), pero no
-existe una forma estándar de:
+El ecosistema de skills ya resolvió el *qué saber*: `npx skills`, skills.sh y
+los repos oficiales (vercel, anthropic, openai, prisma, microsoft…) proveen
+conocimiento experto instalable para cualquier stack y tarea.
 
-- **Seleccionar** expertos según la tarea (qué skills contratar).
-- **Definir** quién ejecuta (write-scoped) y quién solo analiza (read-only).
-- **Coordinar** el equipo con un orquestador + pipeline.
-- **Garantizar seguridad**: baseline gate, aprobación explícita, slices
-  behavior-preserving, tripwire que revierte en rojo.
+El gap está en el *cómo componer*. No existe un estándar para:
 
-Ese es el gap: **la meta-capa que arma harnesses por tarea desde el catálogo de
-skills**, como estándar instalable. Superpowers es una metodología fija de SDLC;
-Harness Factory es el *factory* que genera harnesses acotados por tarea.
+- **Seleccionar** expertos según la tarea (qué skills contratar) de forma
+  reproducible y auditada.
+- **Definir** quién ejecuta (write-scoped) y quién solo analiza (read-only) por
+  construcción, no por buena voluntad.
+- **Coordinar** un pipeline con gates de calidad y aprobación humana.
+- **Versionar** el equipo y el proceso como un contrato, no como una conversación
+  ad-hoc.
+
+Consecuencia hoy: flujos de trabajo manuales, no versionados, sin gates ni
+trazabilidad; el conocimiento experto disponible queda infrautilizado.
+
+## Propuesta
+
+El estándar se organiza en **cuatro planos**:
+
+| Plano | Artefacto | Rol |
+|---|---|---|
+| **Contrato** | `harness.manifest.json` + JSON Schema | Declaración versionable del harness: equipo, pipeline, gates, scope |
+| **Runtime** | `skills/harness-runtime` | Invariantes de ingeniería: seguridad por roles, baseline gate, aprobación, slices, tripwire |
+| **Conocimiento** | `catalog/` + ecosistema skills.sh | Pool de expertos seleccionable por tarea |
+| **Composición** | `skills/harness-factory` | Componedor: intent → roster → manifest → harness → ejecución |
+
+## Garantías del estándar
+
+- **Reproducibilidad** — mismo manifest → mismo harness. `factory build`
+  regenera desde el manifest y la aceptación es un diff vacío.
+- **Auditabilidad** — cada decisión y artefacto queda versionado en
+  `docs/architecture/<scope>/`; el historial del harness es trazable commit a commit.
+- **Seguridad por construcción** — expertos read-only (solo escriben en la
+  carpeta de artefactos), executor write-scoped (`writePaths`), orquestador con
+  `task` restringido al roster; aprobación humana antes de tocar código.
+- **Verificación continua** — baseline gate con tripwire antes de comenzar y
+  gates por slice tras cada cambio; en rojo, revert inmediato.
+- **Agnóstico** — sirve para refactor, greenfield y auditoría; admite cualquier
+  skill del ecosistema y cualquier stack.
 
 ## Cómo funciona
 
@@ -58,11 +88,60 @@ harness-factory/
 ├── templates/                ← plantillas de roles y piezas del harness
 ├── schema/                   ← harness.manifest.schema.json (el contrato)
 ├── catalog/                  ← descriptores de rol (skills → candidatos a experto)
-├── examples/ddd-architecture/← dogfooding: manifest + artefactos reales
+├── examples/ddd-architecture/← caso de referencia validado en producción
 ├── .opencode/INSTALL.md      ← instalación en opencode
 ├── SECURITY.md               ← política de seguridad y reglas para contribuidores
 └── docs/                     ← guías y referencia
 ```
+
+## Comparación
+
+### vs. generadores de producto (Lovable / v0)
+
+Los generadores de producto entregan un **artefacto** a partir de un prompt.
+Harness Factory entrega un **proceso versionado**: no compite con ellos en
+velocidad de prototipado, sino que aporta lo que les falta — trazabilidad,
+control y mantenibilidad.
+
+| Propiedad | Lovable / v0 | Harness Factory |
+|---|---|---|
+| Unidad de salida | Artefacto generado (app/mockup) | Proceso versionado (harness) |
+| Procedencia | Caja negra — sin trazabilidad | Cada decisión auditable y versionada |
+| Control de calidad | Sin gates | Baseline + por slice + tripwire |
+| Contexto de ejecución | Sandbox del producto | Tu repo, tu stack, tus comandos |
+| Ciclo de vida | Prototipo rápido | Producto/refactor mantenible |
+| Complementariedad | Validación de idea | Construcción seria (o reconstrucción del prototipo) |
+
+### vs. frameworks de metodología (Superpowers)
+
+Superpowers es una **metodología fija** de SDLC empaquetada como skills
+componibles. Harness Factory es una **meta-capa** que genera el harness acotado
+a cada tarea, seleccionando expertos del catálogo en lugar de imponer un
+workflow.
+
+| Propiedad | Superpowers | Harness Factory |
+|---|---|---|
+| Tipo | Metodología fija de SDLC | Meta-capa que genera harnesses por tarea |
+| Selección de expertos | Workflow fijo | Por tarea, desde el catálogo de skills |
+| Contrato | Skills | Manifest + JSON Schema versionado |
+| Reproducibilidad | Workflow fijo | `build` + diff vacío |
+| Permisos | Delegación de subagentes | Read-only expertos / write-scoped executor |
+| Alcance | Cómo construir software | Arma el equipo para cualquier tarea |
+
+## Validación
+
+El estándar se deriva de una refactorización real hacia DDD de un módulo crítico
+de un monorepo TypeScript (pnpm workspace):
+
+- **10 slices** behavior-preserving, uno por bounded context, cada uno con sus
+  gates verdes y su commit.
+- **Red de caracterización previa** (tests que fijan el comportamiento actual)
+  como red de seguridad de los slices posteriores.
+- **Sin regresiones** — la suite final supera la inicial y todos los gates
+  (typecheck, lint sin errores nuevos, test, build) verdes tras cada slice.
+- El manifest de esa refactorización vive en
+  [`examples/ddd-architecture/`](./examples/ddd-architecture/) como caso de
+  referencia y prueba de aceptación del estándar.
 
 ## Roadmap
 
@@ -76,16 +155,18 @@ harness-factory/
 
 Las 5 fases del MVP están completadas y el repo está publicado
 (`luismasuarez/harness-factory`). Pendiente:
-- Verificación real del dogfooding: correr `factory build` contra el harness DDD de `portal_saas` y hacer el diff de equivalencia.
+
+- Ejecutar la verificación formal del dogfooding (`factory build` + diff de
+  equivalencia) documentada en `examples/ddd-architecture/`.
 - Publicación en skills.sh (`npx skills publish`).
 
 ## Disclaimer
 
 > **Estándar experimental.** Harness Factory es un MVP que estandariza un flujo
-> validado en un solo proyecto (portal_saas). Úsalo a tu propio riesgo: el
-> estándar (schema/templates/runtime) puede evolucionar con breaking changes
-> hasta 1.0. Los harnesses generados ejecutan cambios sobre tu código — revisá
-> siempre el roster propuesto y el plan antes de aprobar la ejecución.
+> validado en un proyecto de referencia. Úsalo a tu propio riesgo: el estándar
+> (schema/templates/runtime) puede evolucionar con breaking changes hasta 1.0.
+> Los harnesses generados ejecutan cambios sobre tu código — revisá siempre el
+> roster propuesto y el plan antes de aprobar la ejecución.
 >
 > **Seguridad.** Este estándar vive dentro de coding agents y puede tocar
 > credenciales de tu entorno. Lee [SECURITY.md](./SECURITY.md): nunca commitees
