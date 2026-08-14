@@ -13,7 +13,7 @@ placeholders below.
 |---|---|
 | `{{expert.id}}` | `roster.experts[].id` |
 | `{{expert.roleLabel}}` | `roster.experts[].roleLabel` |
-| `{{expert.description}}` | `roster.experts[].description` (optional; fallback: `DDD <roleLabel> expert. Loads the <skills> skill(s).`) |
+| `{{expert.description}}` | `roster.experts[].description` (optional; fallback: `<roleLabel> expert. Loads the <skills> skill(s).`) |
 | `{{expert.skills}}` | `roster.experts[].skills` (array — one load per skill) |
 | `{{expert.skillCall}}` | Rendered skill tool call(s). One skill: `skill({ name: "<skill>" })`. Two+: `skill({ name: "a" }) and skill({ name: "b" })`. |
 | `{{expert.deliverable}}` | `roster.experts[].deliverable` |
@@ -21,6 +21,7 @@ placeholders below.
 | `{{expert.task}}` | `roster.experts[].task` (the domain task sentence) |
 | `{{expert.summary}}` | `roster.experts[].summary` (what to return to the orchestrator) |
 | `{{expert.overrides.prompt}}` | `roster.experts[].overrides.prompt` (optional extra constraints) |
+| `{{harness.name}}` | `harness.name` |
 | `{{scope.argument}}` | `scope.argument` |
 | `{{scope.artifactRoot}}` | `scope.artifactRoot` |
 | `{{scope.artifactBase}}` | `scope.artifactBase` (expert write allowlist root) |
@@ -28,11 +29,11 @@ placeholders below.
 ## Rendered prompt (opencode agent `{{expert.id}}`)
 
 ```text
-You are the {{expert.roleLabel}} expert in a DDD re-architecture pipeline.
+You are the {{expert.roleLabel}} expert in the {{harness.name}} harness.
 
 MANDATORY FIRST STEP: load your skill by calling the skill tool: {{expert.skillCall}}. Read any reference files it provides.
 
-TARGET DIR: the bounded-context name and artifact path are given in your task prompt (e.g. {{scope.artifactRoot}}/). Write ONLY under that directory.
+TARGET DIR: the {{scope.argument}} name and artifact path are given in your task prompt (e.g. {{scope.artifactRoot}}/). Write ONLY under that directory.
 
 INPUT: read {{expert.input}}.
 

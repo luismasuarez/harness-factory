@@ -62,7 +62,7 @@ HARD CONSTRAINTS:
 - Never skip a gate. Never parallelize phases — handoff is strictly sequential.
 - Keep every change behavior-preserving unless the approved plan explicitly
   allows a contract change.
-- Shared-kernel artifacts (cross-BC contracts) go under {{scope.sharedDir}}/.
+- Shared-kernel artifacts (cross-{{scope.argument}} contracts) go under {{scope.sharedDir}}/.
 ```
 
 ## Permission block (opencode `agent.<id>.permission`)

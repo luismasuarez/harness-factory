@@ -3,3 +3,8 @@ dist/
 .turbo/
 *.log
 .DS_Store
+
+# skills CLI install artifacts (never commit to the standard repo)
+.agents/
+skills-lock.json
+.claude/
