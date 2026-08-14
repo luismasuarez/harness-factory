@@ -8,17 +8,20 @@ es un resumen legible.
 
 ```
 harness.manifest.json
-├── harness            → name, version, description, standardVersion
-├── command            → name (/ddd-plan), description, agent, template
-├── scope              → argument (scope), artifactRoot (docs/architecture/<scope>), sharedDir
+├── harness            → name, version, description, skillDescription, standardVersion
+├── command            → name (ddd-plan, sin slash), description, agent, template
+├── scope              → argument (scope), artifactRoot (docs/architecture/<scope>),
+│                         artifactBase (docs/architecture), sharedDir
 ├── roster
-│   ├── experts[]      → id, role, roleLabel, skill, skillSource, deliverable,
-│   │                     input[], readPaths[], trigger[], overrides
-│   └── executor       → id, writePaths[], readPaths[], bash[], gates, commit
+│   ├── experts[]      → id, role, roleLabel, description, skills[], skillSource,
+│   │                     deliverable, input[], readPaths[], trigger[], task, summary,
+│   │                     overrides
+│   └── executor       → id, description, hardConstraints[], writePaths[], readPaths[],
+│                         bash[], gates, commit
 └── orchestrator
     ├── agent          → name, description
     ├── baseline       → gates (commands), cleanWorkingTree, recordSha
-    ├── pipeline[]     → fases: mkdir | delegate | synthesize | execute
+    ├── pipeline[]     → fases: mkdir | delegate | synthesize | execute (+ description)
     ├── synthesis      → deliverable, approvalRequired
     └── execution      → mode (slices|single), sliceRule, perSliceGates
 ```

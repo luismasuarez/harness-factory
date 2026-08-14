@@ -2,8 +2,8 @@
 
 Rendered into the target project's `opencode.json` under `command`.
 
-Placeholders: `{{command.name}}`, `{{command.description}}`,
-`{{command.agent}}`, `{{command.template}}`.
+Placeholders: `{{command.name}}` (NO leading slash — opencode convention),
+`{{command.description}}`, `{{command.agent}}`, `{{command.template}}`.
 
 ```json
 {
@@ -19,4 +19,5 @@ Placeholders: `{{command.name}}`, `{{command.description}}`,
 
 > `$ARGUMENTS` in `template` is replaced with the command's arguments at runtime.
 > The rendered command must be merged into the target project's existing
-> `opencode.json` — it does not replace the file.
+> `opencode.json` — it does not replace the file. When referencing the command
+> in user-facing prose (AGENTS.md, docs), render it as `/{{command.name}}`.

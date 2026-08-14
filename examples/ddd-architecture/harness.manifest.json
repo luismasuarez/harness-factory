@@ -4,10 +4,11 @@
     "name": "ddd-architecture",
     "version": "1.0.0",
     "description": "Re-architect the API domain toward DDD + Clean Architecture + Bounded Contexts + Events (Mixture of Experts)",
+    "skillDescription": "Central orchestration skill for re-architecting the API domain toward DDD + Clean Architecture + Bounded Contexts + Events. Use when the task involves domain modeling, re-architecture, bounded context discovery, dependency rule audits, event-driven design, or surgical refactoring. This is a Mixture of Experts harness: it delegates to six expert subagents and synthesizes a fail-safe refactor plan.",
     "standardVersion": "1.0.0"
   },
   "command": {
-    "name": "/ddd-plan",
+    "name": "ddd-plan",
     "description": "Run the DDD re-architecture pipeline (Mixture of Experts)",
     "agent": "ddd-orchestrator",
     "template": "Load the ddd-orchestrator skill and execute the full DDD re-architecture pipeline for: $ARGUMENTS"
@@ -15,6 +16,7 @@
   "scope": {
     "argument": "scope",
     "artifactRoot": "docs/architecture/<scope>",
+    "artifactBase": "docs/architecture",
     "sharedDir": "docs/architecture/shared"
   },
   "roster": {
@@ -23,7 +25,8 @@
         "id": "expert-strategic",
         "role": "analysis-expert",
         "roleLabel": "Strategic Design",
-        "skill": "ddd-strategic-design",
+        "description": "DDD Strategic Design expert. Maps subdomains, bounded contexts and context mapping for the re-architecture harness. Loads the ddd-strategic-design skill.",
+        "skills": ["ddd-strategic-design"],
         "skillSource": {
           "source": "sickn33/antigravity-awesome-skills",
           "sourceType": "github",
@@ -32,13 +35,16 @@
         "deliverable": "docs/architecture/<scope>/context-map.md",
         "input": ["apps/api/src/modules"],
         "readPaths": ["apps/api/src/modules/**"],
-        "trigger": ["bounded context", "context map", "subdomain"]
+        "trigger": ["bounded context", "context map", "subdomain"],
+        "task": "identify core/supporting/generic subdomains, bounded contexts and context mapping for the existing API",
+        "summary": "what you analyzed, key findings, and the artifact path written"
       },
       {
         "id": "expert-tactical",
         "role": "analysis-expert",
         "roleLabel": "Tactical Design",
-        "skill": "domain-driven-design",
+        "description": "DDD Tactical Design expert. Scores the domain model, identifies aggregates, invariants and ubiquitous language gaps for the re-architecture harness. Loads the domain-driven-design skill.",
+        "skills": ["domain-driven-design"],
         "skillSource": {
           "source": "wondelai/skills",
           "sourceType": "github",
@@ -47,13 +53,19 @@
         "deliverable": "docs/architecture/<scope>/domain-score.md",
         "input": [{ "ref": "expert-strategic.deliverable" }, "apps/api/src/modules"],
         "readPaths": ["apps/api/src/modules/**"],
-        "trigger": ["aggregate", "invariant", "ubiquitous language", "tactical design"]
+        "trigger": ["aggregate", "invariant", "ubiquitous language", "tactical design"],
+        "task": "score the current domain model (Quick Diagnostic 0-10), identify anemic aggregates, invariants living outside aggregates, and ubiquitous language inconsistencies",
+        "summary": "score, key findings, and the artifact path written",
+        "overrides": {
+          "prompt": "If the strategic artifact contradicts your analysis, flag it explicitly."
+        }
       },
       {
         "id": "expert-clean",
         "role": "analysis-expert",
         "roleLabel": "Clean Architecture",
-        "skill": "clean-architecture",
+        "description": "Clean Architecture expert. Audits the dependency rule, layer boundaries and SOLID compliance for the re-architecture harness. Loads the clean-architecture skill.",
+        "skills": ["clean-architecture"],
         "skillSource": {
           "source": "wondelai/skills",
           "sourceType": "github",
@@ -66,13 +78,16 @@
           "apps/api/src/modules"
         ],
         "readPaths": ["apps/api/src/modules/**"],
-        "trigger": ["clean architecture", "dependency rule", "SOLID", "layers"]
+        "trigger": ["clean architecture", "dependency rule", "SOLID", "layers"],
+        "task": "score the current architecture (Dependency Rule), identify violations (framework or persistence dictating structure, logic in controllers, circular deps) and the inversions needed to fix each",
+        "summary": "score, violations, and the artifact path written"
       },
       {
         "id": "expert-events",
         "role": "analysis-expert",
         "roleLabel": "Event Sourcing & CQRS",
-        "skill": "event-sourcing-architect",
+        "description": "Event Sourcing & CQRS expert. Designs the event-driven architecture, event store, projections and sagas for the re-architecture harness. Loads the event-sourcing-architect skill.",
+        "skills": ["event-sourcing-architect"],
         "skillSource": {
           "source": "sickn33/antigravity-awesome-skills",
           "sourceType": "github",
@@ -87,6 +102,8 @@
         ],
         "readPaths": ["apps/api/src/modules/**"],
         "trigger": ["event sourcing", "CQRS", "event store", "event-driven"],
+        "task": "design the event model for the bounded contexts: which aggregates emit which events, whether event sourcing / CQRS is warranted per context (justify each), event store options for this stack, versioning and idempotency strategy",
+        "summary": "design decisions, and the artifact path written",
         "overrides": {
           "prompt": "Do not mandate event sourcing where CRUD is sufficient — call it out."
         }
@@ -95,7 +112,8 @@
         "id": "expert-nestjs",
         "role": "analysis-expert",
         "roleLabel": "NestJS",
-        "skill": "nestjs-best-practices",
+        "description": "NestJS expert. Validates the implementation plan against NestJS best practices (modules, DI, events, guards, pipes) for the re-architecture harness. Loads the nestjs-best-practices skill.",
+        "skills": ["nestjs-best-practices"],
         "skillSource": {
           "source": "kadajett/agent-nestjs-skills",
           "sourceType": "github",
@@ -110,13 +128,19 @@
           "apps/api/src/modules"
         ],
         "readPaths": ["apps/api/src/modules/**"],
-        "trigger": ["nestjs", "di", "guards", "pipes", "dto", "modules"]
+        "trigger": ["nestjs", "di", "guards", "pipes", "dto", "modules"],
+        "task": "validate the planned architecture against NestJS conventions: feature modules, DI patterns (tokens, provider scope), @nestjs/event-emitter decoupling, guards, pipes, DTO serialization, exception filters, circular dependency avoidance. Produce a concrete implementation plan mapping each bounded context to NestJS module structure",
+        "summary": "module mapping, rule violations found, and the artifact path written",
+        "overrides": {
+          "prompt": "Read the rules under its rules/ directory."
+        }
       },
       {
         "id": "expert-prisma",
         "role": "analysis-expert",
         "roleLabel": "Prisma Persistence",
-        "skill": "prisma-client-api",
+        "description": "Prisma expert. Maps aggregates to the Prisma schema and validates the persistence plan (queries, transactions, relations) for the re-architecture harness. Loads the prisma-client-api and prisma-database-setup skills.",
+        "skills": ["prisma-client-api", "prisma-database-setup"],
         "skillSource": {
           "source": "prisma/skills",
           "sourceType": "github",
@@ -133,14 +157,20 @@
         ],
         "readPaths": ["apps/api/prisma/**", "apps/api/src/modules/**"],
         "trigger": ["prisma", "persistence", "schema", "repository", "n+1"],
+        "task": "map the tactical design to the persistence layer: how aggregates map to tables, which repositories/ports are needed, transaction boundaries, avoiding N+1, and whether the current schema (e.g. Device.applicationId flat column without FK) needs correction",
+        "summary": "schema changes proposed, query risks, and the artifact path written",
         "overrides": {
-          "prompt": "No edits to schema.prisma; propose changes only."
+          "prompt": "You are READ-ONLY on schema.prisma: never edit it, propose changes only."
         }
       }
     ],
     "executor": {
       "id": "executor",
       "role": "executor",
+      "description": "Execution subagent of the DDD re-architecture harness. Applies an executable blueprint to apps/api (source writes), runs the harness gates (typecheck/lint/test/build) and commits the slice. The only agent besides the orchestrator allowed to edit source code; experts stay read-only (design only).",
+      "hardConstraints": [
+        "no edits to app.module.ts unless the blueprint says so"
+      ],
       "writePaths": ["apps/api/**"],
       "readPaths": ["docs/**"],
       "bash": ["pnpm *", "npx *"],
@@ -148,7 +178,7 @@
         "commands": [
           { "name": "typecheck", "command": "pnpm --filter @portal/api typecheck" },
           { "name": "lint", "command": "pnpm --filter @portal/api lint", "expect": "no-new-errors" },
-          { "name": "test", "command": "pnpm --filter @portal/api test" },
+          { "name": "test", "command": "pnpm --filter @portal/api test", "expect": "green", "notes": ">= baseline count, all green, boot guard (app.module.spec.ts) green" },
           { "name": "build", "command": "pnpm --filter @portal/api build" }
         ]
       },
@@ -176,12 +206,12 @@
     },
     "pipeline": [
       { "type": "mkdir", "path": "docs/architecture/<scope>" },
-      { "type": "delegate", "expert": "expert-strategic" },
-      { "type": "delegate", "expert": "expert-tactical" },
-      { "type": "delegate", "expert": "expert-clean" },
-      { "type": "delegate", "expert": "expert-events" },
-      { "type": "delegate", "expert": "expert-nestjs" },
-      { "type": "delegate", "expert": "expert-prisma" },
+      { "type": "delegate", "expert": "expert-strategic", "description": "bounded contexts, subdomains, context mapping" },
+      { "type": "delegate", "expert": "expert-tactical", "description": "aggregates, invariants, ubiquitous language, scoring" },
+      { "type": "delegate", "expert": "expert-clean", "description": "dependency rule, layers, SOLID" },
+      { "type": "delegate", "expert": "expert-events", "description": "event sourcing, CQRS, event store" },
+      { "type": "delegate", "expert": "expert-nestjs", "description": "NestJS implementation" },
+      { "type": "delegate", "expert": "expert-prisma", "description": "Prisma schema and queries" },
       { "type": "synthesize", "path": "docs/architecture/<scope>/refactor-plan.md" },
       { "type": "execute" }
     ],
@@ -191,7 +221,7 @@
     },
     "execution": {
       "mode": "slices",
-      "sliceRule": "One bounded context per slice; behavior-preserving first; characterization tests when coverage is low; refactor separated from redesign.",
+      "sliceRule": "one bounded context per slice, behavior-preserving first, characterization tests when coverage is low, refactor separated from redesign",
       "perSliceGates": {
         "commands": [
           { "name": "typecheck", "command": "pnpm --filter @portal/api typecheck" },

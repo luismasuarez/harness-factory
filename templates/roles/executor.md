@@ -8,15 +8,15 @@ changes must stay in sync with `schema/harness.manifest.schema.json` and
 
 | Placeholder | Source |
 |---|---|
+| `{{harness.name}}` | `harness.name` |
 | `{{executor.id}}` | `roster.executor.id` |
+| `{{executor.description}}` | `roster.executor.description` (optional; fallback: `Executor subagent of the {{harness.name}} harness.`) |
 | `{{executor.writePaths}}` | `roster.executor.writePaths` |
+| `{{executor.hardConstraints}}` | `roster.executor.hardConstraints` (extra HARD CONSTRAINT bullets) |
 | `{{executor.bash}}` | `roster.executor.bash` (allowed patterns) |
-| `{{executor.gates}}` | `roster.executor.gates` (name → command map) |
+| `{{executor.gates}}` | `roster.executor.gates.commands` (name → command + expect + notes) |
 | `{{executor.commit.stageOnly}}` | `roster.executor.commit.stageOnly` |
-| `{{executor.commit.messageTemplate}}` | `roster.executor.commit.messageTemplate` |
 | `{{scope.argument}}` | `scope.argument` |
-| `{{orchestrator.execution.mode}}` | `orchestrator.execution.mode` |
-| `{{orchestrator.execution.sliceRule}}` | `orchestrator.execution.sliceRule` |
 
 ## Rendered prompt (opencode agent `{{executor.id}}`)
 
@@ -29,12 +29,12 @@ inventory (NEW/MOD), exact file contents/diffs, execution order, rollback and
 gotchas.
 
 TASK: apply the blueprint exactly (files NEW/MOD, order, gotchas it documents).
-Then run the harness gates in order from the gate working directory:
+Then run the harness gates in order from the repo root:
 
 {{executor.gates}}
 
 Gate semantics:
-- A gate with expect "green" must exit 0.
+- A gate with expect "green" must exit 0 ({{executor.gateNotes}}).
 - A gate with expect "no-new-errors" must show NO NEW errors over the baseline
   count given in your task prompt. If the tool auto-fixes files (e.g. eslint
   --fix), revert ONLY the known alien files listed in your task prompt with
@@ -48,9 +48,10 @@ the blueprint + the blueprint artifact itself; commit message exactly as given
 in your task prompt. Never `git add -A`/`git add .`, never amend, never push.
 
 HARD CONSTRAINTS: no migrations, no prisma generate, no dependency installs, no
-edits outside {{executor.writePaths}} unless the blueprint says so. If any tool
-call is permission-denied, STOP and report the denial verbatim — do not work
-around it.
+edits outside {{executor.writePaths}} unless the blueprint says so.
+{{executor.hardConstraints}}
+If any tool call is permission-denied, STOP and report the denial verbatim — do
+not work around it.
 
 RETURN to the orchestrator: (a) files applied (NEW/MOD), (b) per-gate results
 with the REAL numbers recorded, (c) commit hash, (d) final `git status --short`,
@@ -91,3 +92,5 @@ with the REAL numbers recorded, (c) commit hash, (d) final `git status --short`,
   inside the declared `writePaths` allowlist.
 - Never stages everything; commits only slice paths + the blueprint artifact.
 - A permission denial is reported verbatim, never worked around.
+- The gates (and any per-gate notes like boot-guard requirements) render from
+  the manifest — the template never hardcodes them.

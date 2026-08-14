@@ -13,42 +13,41 @@ placeholders below.
 |---|---|
 | `{{expert.id}}` | `roster.experts[].id` |
 | `{{expert.roleLabel}}` | `roster.experts[].roleLabel` |
-| `{{expert.skill}}` | `roster.experts[].skill` |
+| `{{expert.description}}` | `roster.experts[].description` (optional; fallback: `DDD <roleLabel> expert. Loads the <skills> skill(s).`) |
+| `{{expert.skills}}` | `roster.experts[].skills` (array — one load per skill) |
+| `{{expert.skillCall}}` | Rendered skill tool call(s). One skill: `skill({ name: "<skill>" })`. Two+: `skill({ name: "a" }) and skill({ name: "b" })`. |
 | `{{expert.deliverable}}` | `roster.experts[].deliverable` |
-| `{{expert.input}}` | `roster.experts[].input` (paths) |
-| `{{expert.readPaths}}` | `roster.experts[].readPaths` |
-| `{{expert.overrides.prompt}}` | `roster.experts[].overrides.prompt` (optional) |
+| `{{expert.input}}` | `roster.experts[].input` (paths, refs resolved) |
+| `{{expert.task}}` | `roster.experts[].task` (the domain task sentence) |
+| `{{expert.summary}}` | `roster.experts[].summary` (what to return to the orchestrator) |
+| `{{expert.overrides.prompt}}` | `roster.experts[].overrides.prompt` (optional extra constraints) |
 | `{{scope.argument}}` | `scope.argument` |
 | `{{scope.artifactRoot}}` | `scope.artifactRoot` |
+| `{{scope.artifactBase}}` | `scope.artifactBase` (expert write allowlist root) |
 
 ## Rendered prompt (opencode agent `{{expert.id}}`)
 
 ```text
-You are the {{expert.roleLabel}} expert in the {{harness.name}} harness pipeline.
+You are the {{expert.roleLabel}} expert in a DDD re-architecture pipeline.
 
-MANDATORY FIRST STEP: load your skill by calling the skill tool:
-skill({{expert.skill}}). Read any reference files it provides.
+MANDATORY FIRST STEP: load your skill by calling the skill tool: {{expert.skillCall}}. Read any reference files it provides.
 
-TARGET DIR: the scope name and artifact path are given in your task prompt.
-Write ONLY under {{scope.artifactRoot}}.
+TARGET DIR: the bounded-context name and artifact path are given in your task prompt (e.g. {{scope.artifactRoot}}/). Write ONLY under that directory.
 
-INPUT: read the following before analyzing:
-- {{expert.input}}
+INPUT: read {{expert.input}}.
 
-TASK: using the skill's methodology, produce your analysis and write your
-deliverable to the artifact path given in your task prompt
-({{expert.deliverable}}) using the Write tool.
-
-{{expert.overrides.prompt}}
+TASK: using the skill's methodology, {{expert.task}}. Then write your deliverable to the artifact path given in your task prompt ({{expert.deliverable}}) using the Write tool.
 
 HARD CONSTRAINTS:
-- You are READ-ONLY on code: you may ONLY write inside {{scope.artifactRoot}}.
-  Never edit source files.
+- You are READ-ONLY on code: you may ONLY write inside the {{scope.artifactBase}}/ directory. Never edit source files.
 - Never run installs, migrations or destructive commands.
-- If a prior artifact contradicts your analysis, flag it explicitly.
-- Return a concise summary to the orchestrator: what you analyzed, key
-  findings, and the artifact path written.
+{{expert.overrides.prompt}}
+- Return a concise summary to the orchestrator: {{expert.summary}}.
 ```
+
+> The two blank lines around `{{expert.overrides.prompt}}` are intentional: the
+> overrides render as one or more constraint bullets; when absent, both lines
+> collapse to nothing.
 
 ## Permission block (opencode `agent.<id>.permission`)
 
@@ -56,7 +55,7 @@ HARD CONSTRAINTS:
 {
   "edit": {
     "*": "deny",
-    "{{scope.artifactRoot}}/**": "allow"
+    "{{scope.artifactBase}}/**": "allow"
   },
   "bash": {
     "*": "deny",
@@ -68,15 +67,19 @@ HARD CONSTRAINTS:
   },
   "skill": {
     "*": "deny",
-    "{{expert.skill}}": "allow"
+    "{{expert.skills}}": "allow"
   }
 }
 ```
 
+> `{{expert.skills}}` in the permission block renders one `"<skill>": "allow"`
+> entry per skill (all experts write under the full `artifactBase` tree so they
+> can also write shared-kernel artifacts under `sharedDir`).
+
 ## Invariants
 
-- Read-only on source; writes only under the scope artifact root.
-- Deny-all `skill` except the one the expert owns.
-- A failed load of the skill (e.g. tool unavailable in subagent context) is
+- Read-only on source; writes only under the scope artifact base.
+- Deny-all `skill` except the skills the expert owns.
+- A failed load of a skill (e.g. tool unavailable in subagent context) is
   reported to the orchestrator, which falls back to injecting the skill's
   methodology into the delegation prompt — never a silent empty run.

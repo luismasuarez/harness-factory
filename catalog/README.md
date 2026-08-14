@@ -10,13 +10,13 @@ Each catalog file is a JSON array of entries:
 
 | Field | Purpose |
 |---|---|
-| `skill` | Name of the skill (as loaded via the skill tool). |
+| `skill` | Primary skill name (as loaded via the skill tool). |
 | `roleLabel` | Human label for the expert role. |
 | `trigger` | Keywords the selector matches against the intent. |
 | `skillSource` | Install source (same shape as `skills-lock.json`), used for `npx skills add`. |
 | `deliverable` | Default artifact filename this expert produces. |
 | `description` | One-line description (also used for routing). |
-| `additionalSkills` | Optional extra skills the expert loads. |
+| `additionalSkills` | Optional extra skills the expert loads (resolved to `skills[]` in the manifest). |
 
 ## Conventions
 
