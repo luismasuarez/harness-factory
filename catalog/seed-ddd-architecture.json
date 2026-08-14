@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "role": "analysis-expert",
+  "entries": [
+    {
+      "skill": "ddd-strategic-design",
+      "roleLabel": "Strategic Design",
+      "trigger": ["bounded context", "context map", "subdomain", "context mapping", "strategic design", "domain model overview"],
+      "skillSource": {
+        "source": "sickn33/antigravity-awesome-skills",
+        "sourceType": "github",
+        "skillPath": "skills/ddd-strategic-design/SKILL.md"
+      },
+      "deliverable": "context-map.md",
+      "description": "Maps subdomains, bounded contexts and context mapping for a re-architecture."
+    },
+    {
+      "skill": "domain-driven-design",
+      "roleLabel": "Tactical Design",
+      "trigger": ["aggregate", "invariant", "tactical design", "ubiquitous language", "entity", "value object", "domain model scoring", "anemic model"],
+      "skillSource": {
+        "source": "wondelai/skills",
+        "sourceType": "github",
+        "skillPath": "domain-driven-design/SKILL.md"
+      },
+      "deliverable": "domain-score.md",
+      "description": "Scores the domain model, identifies aggregates, invariants and ubiquitous language gaps."
+    },
+    {
+      "skill": "clean-architecture",
+      "roleLabel": "Clean Architecture",
+      "trigger": ["clean architecture", "dependency rule", "layers", "SOLID", "architecture audit", "layer boundaries", "inversion"],
+      "skillSource": {
+        "source": "wondelai/skills",
+        "sourceType": "github",
+        "skillPath": "clean-architecture/SKILL.md"
+      },
+      "deliverable": "dependency-plan.md",
+      "description": "Audits the dependency rule, layer boundaries and SOLID compliance."
+    },
+    {
+      "skill": "event-sourcing-architect",
+      "roleLabel": "Event Sourcing & CQRS",
+      "trigger": ["event sourcing", "CQRS", "event store", "event-driven", "saga", "projection", "domain events"],
+      "skillSource": {
+        "source": "sickn33/antigravity-awesome-skills",
+        "sourceType": "github",
+        "skillPath": "skills/event-sourcing-architect/SKILL.md"
+      },
+      "deliverable": "event-design.md",
+      "description": "Designs the event-driven architecture, event store, projections and sagas."
+    },
+    {
+      "skill": "nestjs-best-practices",
+      "roleLabel": "NestJS",
+      "trigger": ["nestjs", "module structure", "di", "dependency injection", "guards", "pipes", "dto", "exception filter", "nestjs conventions"],
+      "skillSource": {
+        "source": "kadajett/agent-nestjs-skills",
+        "sourceType": "github",
+        "skillPath": "skills/nestjs-best-practices/SKILL.md"
+      },
+      "deliverable": "nestjs-plan.md",
+      "description": "Validates implementation against NestJS best practices (modules, DI, events, guards, pipes)."
+    },
+    {
+      "skill": "prisma-client-api",
+      "roleLabel": "Prisma Persistence",
+      "trigger": ["prisma", "persistence", "schema", "repository", "n+1", "transaction", "orm", "database mapping"],
+      "skillSource": {
+        "source": "prisma/skills",
+        "sourceType": "github",
+        "skillPath": "prisma-client-api/SKILL.md"
+      },
+      "deliverable": "persistence-plan.md",
+      "description": "Maps aggregates to the Prisma schema and validates the persistence plan (queries, transactions, relations).",
+      "additionalSkills": ["prisma-database-setup"]
+    }
+  ]
+}

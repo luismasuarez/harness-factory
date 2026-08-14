@@ -1,0 +1,409 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/harness-factory/harness-factory/blob/main/schema/harness.manifest.schema.json",
+  "title": "Harness Manifest",
+  "description": "The source of truth of an agent harness. Declares the variable parts of a harness (team, scopes, pipeline); the fixed parts (security model, gates, approval, slices) live in the harness-runtime skill and never change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "harness",
+    "command",
+    "scope",
+    "roster",
+    "orchestrator"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URI of this schema.",
+      "format": "uri"
+    },
+    "harness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique harness id, e.g. 'ddd-architecture'."
+        },
+        "version": {
+          "type": "string",
+          "description": "SemVer of this harness manifest."
+        },
+        "description": {
+          "type": "string",
+          "description": "One-line summary of what this harness does."
+        },
+        "standardVersion": {
+          "type": "string",
+          "description": "Harness Factory standard version this manifest conforms to.",
+          "default": "1.0.0"
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "template"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^/[a-z0-9-]+$",
+          "description": "Slash command that triggers the harness, e.g. '/ddd-plan'."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description shown by the agent for this command."
+        },
+        "agent": {
+          "type": "string",
+          "description": "Name of the orchestrator agent. Defaults to <harness.name>-orchestrator.",
+          "default": "orchestrator"
+        },
+        "template": {
+          "type": "string",
+          "description": "Prompt template. '$ARGUMENTS' is replaced with the command arguments."
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argument", "artifactRoot", "sharedDir"],
+      "properties": {
+        "argument": {
+          "type": "string",
+          "description": "Name of the scope CLI argument (the bounded context / target), e.g. 'scope'.",
+          "default": "scope"
+        },
+        "artifactRoot": {
+          "type": "string",
+          "description": "Directory template for per-scope artifacts. '<scope>' is replaced at runtime. e.g. 'docs/architecture/<scope>'.",
+          "examples": ["docs/architecture/<scope>"]
+        },
+        "sharedDir": {
+          "type": "string",
+          "description": "Directory for cross-scope (shared kernel) artifacts.",
+          "default": "docs/architecture/shared"
+        }
+      }
+    },
+    "roster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["experts", "executor"],
+      "properties": {
+        "experts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/expert" }
+        },
+        "executor": {
+          "$ref": "#/definitions/executor"
+        }
+      }
+    },
+    "orchestrator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent", "baseline", "pipeline"],
+      "properties": {
+        "agent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "description"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Agent id of the orchestrator, e.g. 'ddd-orchestrator'."
+            },
+            "description": {
+              "type": "string",
+              "description": "Description of the orchestrator role."
+            }
+          }
+        },
+        "baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["gates"],
+          "properties": {
+            "gates": { "$ref": "#/definitions/gates" },
+            "cleanWorkingTree": {
+              "type": "boolean",
+              "description": "Require a clean git status before starting.",
+              "default": true
+            },
+            "recordSha": {
+              "type": "boolean",
+              "description": "Record the baseline commit SHA.",
+              "default": true
+            }
+          }
+        },
+        "pipeline": {
+          "type": "array",
+          "description": "Ordered phases of the harness. Strictly sequential — no parallel phases.",
+          "items": { "$ref": "#/definitions/phase" }
+        },
+        "synthesis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["deliverable"],
+          "properties": {
+            "deliverable": {
+              "type": "string",
+              "description": "Path template of the consolidated plan, e.g. 'docs/architecture/<scope>/refactor-plan.md'."
+            },
+            "approvalRequired": {
+              "type": "boolean",
+              "description": "Present the plan and STOP for explicit approval before execution.",
+              "default": true
+            }
+          }
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "enum": ["slices", "single"],
+              "description": "'slices': apply behavior-preserving slices one at a time with gates per slice. 'single': one shot.",
+              "default": "slices"
+            },
+            "sliceRule": {
+              "type": "string",
+              "description": "Free-text rule defining what a valid slice is (e.g. one bounded context per slice, no contract changes)."
+            },
+            "perSliceGates": {
+              "$ref": "#/definitions/gates"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "skillSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "sourceType"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Where the skill comes from, e.g. 'wondelai/skills' (same shape as skills-lock.json)."
+        },
+        "sourceType": {
+          "enum": ["github", "autoskills-registry", "builtin"],
+          "description": "Origin type of the skill."
+        },
+        "skillPath": {
+          "type": "string",
+          "description": "Path to the SKILL.md inside the source, e.g. 'domain-driven-design/SKILL.md'."
+        }
+      }
+    },
+    "expert": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "skill", "deliverable"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique expert id, used as the agent name, e.g. 'expert-strategic'."
+        },
+        "role": {
+          "type": "string",
+          "description": "Role template id from templates/roles/, e.g. 'analysis-expert'.",
+          "default": "analysis-expert"
+        },
+        "roleLabel": {
+          "type": "string",
+          "description": "Human label for the role, e.g. 'Strategic Design'."
+        },
+        "skill": {
+          "type": "string",
+          "description": "Name of the skill this expert loads, e.g. 'ddd-strategic-design'."
+        },
+        "skillSource": {
+          "$ref": "#/definitions/skillSource",
+          "description": "Where the skill is installed from (used by 'npx skills add')."
+        },
+        "deliverable": {
+          "type": "string",
+          "description": "Path template of the artifact this expert writes, e.g. 'docs/architecture/<scope>/context-map.md'."
+        },
+        "input": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              { "type": "string", "description": "Path template of a prior artifact, e.g. 'docs/architecture/<scope>/context-map.md'." },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["ref"],
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "description": "Reference to another expert's deliverable by id, e.g. 'expert-strategic.deliverable'."
+                  }
+                }
+              }
+            ]
+          },
+          "description": "Inputs this expert consumes (prior artifacts or repo paths)."
+        },
+        "readPaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Source paths this expert may read (permission allowlist)."
+        },
+        "trigger": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Keywords the selector matches against the intent (routing metadata)."
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "prompt": {
+              "type": "string",
+              "description": "Extra instruction appended to the role template prompt."
+            },
+            "permission": {
+              "type": "object",
+              "description": "Per-expert permission overrides on top of the role template defaults."
+            }
+          }
+        }
+      }
+    },
+    "executor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "writePaths"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Agent id of the executor, e.g. 'executor'.",
+          "default": "executor"
+        },
+        "role": {
+          "type": "string",
+          "description": "Role template id from templates/roles/, e.g. 'executor'.",
+          "default": "executor"
+        },
+        "writePaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Source paths this executor may WRITE (permission allowlist), e.g. ['apps/api/**']."
+        },
+        "readPaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional read-only paths beyond writePaths."
+        },
+        "bash": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Allowed bash command patterns for the executor."
+        },
+        "gates": {
+          "$ref": "#/definitions/gates",
+          "description": "Per-slice verification gates the executor runs before committing."
+        },
+        "commit": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "stageOnly": {
+              "type": "boolean",
+              "description": "Stage only slice paths (never 'git add .').",
+              "default": true
+            },
+            "messageTemplate": {
+              "type": "string",
+              "description": "Commit message template; '<slice>' is replaced with the slice name.",
+              "default": "harness(<scope>): <slice>"
+            }
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commands"],
+      "properties": {
+        "dir": {
+          "type": "string",
+          "description": "Working directory for the gates, relative to repo root."
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "command"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "examples": ["typecheck", "lint", "test", "build"]
+              },
+              "command": {
+                "type": "string",
+                "description": "Shell command, e.g. 'pnpm --filter @portal/api typecheck'."
+              },
+              "expect": {
+                "enum": ["green", "no-new-errors"],
+                "description": "'no-new-errors': pass if no NEW errors over the baseline count."
+              },
+              "blocking": {
+                "type": "boolean",
+                "description": "A failed blocking gate trips the tripwire (hard stop).",
+                "default": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": ["mkdir", "delegate", "synthesize", "execute"]
+        },
+        "expert": {
+          "type": "string",
+          "description": "Expert id (for type=delegate). References roster.experts[].id.",
+          "examples": ["expert-strategic"]
+        },
+        "path": {
+          "type": "string",
+          "description": "Directory or deliverable path (for type=mkdir / synthesize)."
+        },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Artifact gate checked after the phase (default for delegate: artifact exists and is non-trivial).",
+          "properties": {
+            "exists": { "type": "boolean", "default": true },
+            "minBytes": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "stopOnFail": {
+          "type": "boolean",
+          "description": "STOP and report instead of proceeding if the phase fails.",
+          "default": true
+        }
+      }
+    }
+  }
+}

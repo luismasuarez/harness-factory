@@ -1,0 +1,205 @@
+{
+  "$schema": "https://github.com/harness-factory/harness-factory/blob/main/schema/harness.manifest.schema.json",
+  "harness": {
+    "name": "ddd-architecture",
+    "version": "1.0.0",
+    "description": "Re-architect the API domain toward DDD + Clean Architecture + Bounded Contexts + Events (Mixture of Experts)",
+    "standardVersion": "1.0.0"
+  },
+  "command": {
+    "name": "/ddd-plan",
+    "description": "Run the DDD re-architecture pipeline (Mixture of Experts)",
+    "agent": "ddd-orchestrator",
+    "template": "Load the ddd-orchestrator skill and execute the full DDD re-architecture pipeline for: $ARGUMENTS"
+  },
+  "scope": {
+    "argument": "scope",
+    "artifactRoot": "docs/architecture/<scope>",
+    "sharedDir": "docs/architecture/shared"
+  },
+  "roster": {
+    "experts": [
+      {
+        "id": "expert-strategic",
+        "role": "analysis-expert",
+        "roleLabel": "Strategic Design",
+        "skill": "ddd-strategic-design",
+        "skillSource": {
+          "source": "sickn33/antigravity-awesome-skills",
+          "sourceType": "github",
+          "skillPath": "skills/ddd-strategic-design/SKILL.md"
+        },
+        "deliverable": "docs/architecture/<scope>/context-map.md",
+        "input": ["apps/api/src/modules"],
+        "readPaths": ["apps/api/src/modules/**"],
+        "trigger": ["bounded context", "context map", "subdomain"]
+      },
+      {
+        "id": "expert-tactical",
+        "role": "analysis-expert",
+        "roleLabel": "Tactical Design",
+        "skill": "domain-driven-design",
+        "skillSource": {
+          "source": "wondelai/skills",
+          "sourceType": "github",
+          "skillPath": "domain-driven-design/SKILL.md"
+        },
+        "deliverable": "docs/architecture/<scope>/domain-score.md",
+        "input": [{ "ref": "expert-strategic.deliverable" }, "apps/api/src/modules"],
+        "readPaths": ["apps/api/src/modules/**"],
+        "trigger": ["aggregate", "invariant", "ubiquitous language", "tactical design"]
+      },
+      {
+        "id": "expert-clean",
+        "role": "analysis-expert",
+        "roleLabel": "Clean Architecture",
+        "skill": "clean-architecture",
+        "skillSource": {
+          "source": "wondelai/skills",
+          "sourceType": "github",
+          "skillPath": "clean-architecture/SKILL.md"
+        },
+        "deliverable": "docs/architecture/<scope>/dependency-plan.md",
+        "input": [
+          { "ref": "expert-strategic.deliverable" },
+          { "ref": "expert-tactical.deliverable" },
+          "apps/api/src/modules"
+        ],
+        "readPaths": ["apps/api/src/modules/**"],
+        "trigger": ["clean architecture", "dependency rule", "SOLID", "layers"]
+      },
+      {
+        "id": "expert-events",
+        "role": "analysis-expert",
+        "roleLabel": "Event Sourcing & CQRS",
+        "skill": "event-sourcing-architect",
+        "skillSource": {
+          "source": "sickn33/antigravity-awesome-skills",
+          "sourceType": "github",
+          "skillPath": "skills/event-sourcing-architect/SKILL.md"
+        },
+        "deliverable": "docs/architecture/<scope>/event-design.md",
+        "input": [
+          { "ref": "expert-strategic.deliverable" },
+          { "ref": "expert-tactical.deliverable" },
+          { "ref": "expert-clean.deliverable" },
+          "apps/api/src/modules"
+        ],
+        "readPaths": ["apps/api/src/modules/**"],
+        "trigger": ["event sourcing", "CQRS", "event store", "event-driven"],
+        "overrides": {
+          "prompt": "Do not mandate event sourcing where CRUD is sufficient — call it out."
+        }
+      },
+      {
+        "id": "expert-nestjs",
+        "role": "analysis-expert",
+        "roleLabel": "NestJS",
+        "skill": "nestjs-best-practices",
+        "skillSource": {
+          "source": "kadajett/agent-nestjs-skills",
+          "sourceType": "github",
+          "skillPath": "skills/nestjs-best-practices/SKILL.md"
+        },
+        "deliverable": "docs/architecture/<scope>/nestjs-plan.md",
+        "input": [
+          { "ref": "expert-strategic.deliverable" },
+          { "ref": "expert-tactical.deliverable" },
+          { "ref": "expert-clean.deliverable" },
+          { "ref": "expert-events.deliverable" },
+          "apps/api/src/modules"
+        ],
+        "readPaths": ["apps/api/src/modules/**"],
+        "trigger": ["nestjs", "di", "guards", "pipes", "dto", "modules"]
+      },
+      {
+        "id": "expert-prisma",
+        "role": "analysis-expert",
+        "roleLabel": "Prisma Persistence",
+        "skill": "prisma-client-api",
+        "skillSource": {
+          "source": "prisma/skills",
+          "sourceType": "github",
+          "skillPath": "prisma-client-api/SKILL.md"
+        },
+        "deliverable": "docs/architecture/<scope>/persistence-plan.md",
+        "input": [
+          { "ref": "expert-strategic.deliverable" },
+          { "ref": "expert-tactical.deliverable" },
+          { "ref": "expert-clean.deliverable" },
+          { "ref": "expert-events.deliverable" },
+          { "ref": "expert-nestjs.deliverable" },
+          "apps/api/prisma/schema.prisma"
+        ],
+        "readPaths": ["apps/api/prisma/**", "apps/api/src/modules/**"],
+        "trigger": ["prisma", "persistence", "schema", "repository", "n+1"],
+        "overrides": {
+          "prompt": "No edits to schema.prisma; propose changes only."
+        }
+      }
+    ],
+    "executor": {
+      "id": "executor",
+      "role": "executor",
+      "writePaths": ["apps/api/**"],
+      "readPaths": ["docs/**"],
+      "bash": ["pnpm *", "npx *"],
+      "gates": {
+        "commands": [
+          { "name": "typecheck", "command": "pnpm --filter @portal/api typecheck" },
+          { "name": "lint", "command": "pnpm --filter @portal/api lint", "expect": "no-new-errors" },
+          { "name": "test", "command": "pnpm --filter @portal/api test" },
+          { "name": "build", "command": "pnpm --filter @portal/api build" }
+        ]
+      },
+      "commit": {
+        "stageOnly": true
+      }
+    }
+  },
+  "orchestrator": {
+    "agent": {
+      "name": "ddd-orchestrator",
+      "description": "Central coordinator of the DDD re-architecture harness (Mixture of Experts). Delegates design to the six expert subagents, execution to the executor subagent, and synthesizes the surgical refactor plan. Only the orchestrator and the executor edit source code, and only after the plan is approved."
+    },
+    "baseline": {
+      "gates": {
+        "commands": [
+          { "name": "typecheck", "command": "pnpm --filter @portal/api typecheck" },
+          { "name": "lint", "command": "pnpm --filter @portal/api lint" },
+          { "name": "test", "command": "pnpm --filter @portal/api test" },
+          { "name": "build", "command": "pnpm --filter @portal/api build" }
+        ]
+      },
+      "cleanWorkingTree": true,
+      "recordSha": true
+    },
+    "pipeline": [
+      { "type": "mkdir", "path": "docs/architecture/<scope>" },
+      { "type": "delegate", "expert": "expert-strategic" },
+      { "type": "delegate", "expert": "expert-tactical" },
+      { "type": "delegate", "expert": "expert-clean" },
+      { "type": "delegate", "expert": "expert-events" },
+      { "type": "delegate", "expert": "expert-nestjs" },
+      { "type": "delegate", "expert": "expert-prisma" },
+      { "type": "synthesize", "path": "docs/architecture/<scope>/refactor-plan.md" },
+      { "type": "execute" }
+    ],
+    "synthesis": {
+      "deliverable": "docs/architecture/<scope>/refactor-plan.md",
+      "approvalRequired": true
+    },
+    "execution": {
+      "mode": "slices",
+      "sliceRule": "One bounded context per slice; behavior-preserving first; characterization tests when coverage is low; refactor separated from redesign.",
+      "perSliceGates": {
+        "commands": [
+          { "name": "typecheck", "command": "pnpm --filter @portal/api typecheck" },
+          { "name": "lint", "command": "pnpm --filter @portal/api lint", "expect": "no-new-errors" },
+          { "name": "test", "command": "pnpm --filter @portal/api test" },
+          { "name": "build", "command": "pnpm --filter @portal/api build" }
+        ]
+      }
+    }
+  }
+}
